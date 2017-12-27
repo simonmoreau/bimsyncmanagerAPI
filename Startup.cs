@@ -15,9 +15,17 @@ namespace bimsyncManagerAPI
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env)
         {
-            Configuration = configuration;
+
+            IConfigurationBuilder builder = new ConfigurationBuilder().SetBasePath(env.ContentRootPath);
+            
+            if (env.IsDevelopment())
+            {
+                builder.AddUserSecrets<Startup>();
+            }
+
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -27,6 +35,10 @@ namespace bimsyncManagerAPI
         {
             services.AddDbContext<UserContext>(opt => opt.UseSqlite("Data Source=users.db"));
             services.AddMvc();
+            services.AddSingleton<IConfiguration>(Configuration);
+
+            //string userSecret = Configuration["client_id"];
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

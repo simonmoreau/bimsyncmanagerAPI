@@ -19,7 +19,7 @@ namespace bimsyncManagerAPI.Migrations
                     PowerBiSecret = table.Column<string>(nullable: true),
                     RefreshDate = table.Column<string>(nullable: true),
                     RefreshToken = table.Column<string>(nullable: true),
-                    TokenExpireIn = table.Column<string>(nullable: true),
+                    TokenExpireIn = table.Column<int>(nullable: false),
                     TokenType = table.Column<string>(nullable: true),
                     bimsync_id = table.Column<string>(nullable: true)
                 },

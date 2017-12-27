@@ -8,7 +8,7 @@ namespace bimsyncManagerAPI.Models
         public string PowerBiSecret{get;set;}
         public string AccessToken{get;set;}
         public string TokenType{get;set;}
-        public string TokenExpireIn{get;set;}
+        public int TokenExpireIn{get;set;}
         public string RefreshToken{get;set;}
         public string RefreshDate{get;set;}
 

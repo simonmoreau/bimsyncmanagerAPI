@@ -33,7 +33,7 @@ namespace bimsyncManagerAPI.Migrations
 
                     b.Property<string>("RefreshToken");
 
-                    b.Property<string>("TokenExpireIn");
+                    b.Property<int>("TokenExpireIn");
 
                     b.Property<string>("TokenType");
 

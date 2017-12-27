@@ -10,7 +10,7 @@ using System;
 namespace bimsyncManagerAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20171225210352_InitialCreate")]
+    [Migration("20171227081649_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace bimsyncManagerAPI.Migrations
 
                     b.Property<string>("RefreshToken");
 
-                    b.Property<string>("TokenExpireIn");
+                    b.Property<int>("TokenExpireIn");
 
                     b.Property<string>("TokenType");
 
