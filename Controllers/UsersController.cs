@@ -79,9 +79,7 @@ namespace bimsyncManagerAPI.Controllers
             string callbackUri = "http://localhost:4200/callback";
 
             HttpClient client = new HttpClient();
-            //client.BaseAddress =  new Uri("https://api.bimsync.com/oauth2/token");
             client.DefaultRequestHeaders.Accept.Clear();
-            //client.DefaultRequestHeaders.Add("Content-Type", "application/x-www-form-urlencoded");
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
 
             string test = Configuration["client_id"];
@@ -93,8 +91,6 @@ namespace bimsyncManagerAPI.Controllers
                     $"&client_secret={Configuration["client_secret"]}";
 
             HttpContent body = new StringContent(bodyContent, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
-
-            //"grant_type=authorization_code&code=I6MEOBKZyL&redirect_uri=http://localhost:4200/callback&client_id=6E63g0C2zVOwlNm&client_secret=gGYTHliWio6LBzZ"
 
             HttpResponseMessage response = await client.PostAsync("https://api.bimsync.com/oauth2/token", body);
 
