@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using bimsyncManagerAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +13,7 @@ namespace bimsyncManagerAPI
         {
 
             IConfigurationBuilder builder = new ConfigurationBuilder().SetBasePath(env.ContentRootPath);
-            
+
             if (env.IsDevelopment())
             {
                 builder.AddUserSecrets<Startup>();
@@ -36,9 +30,15 @@ namespace bimsyncManagerAPI
             services.AddDbContext<UserContext>(opt => opt.UseSqlite("Data Source=users.db"));
             services.AddMvc();
             services.AddSingleton<IConfiguration>(Configuration);
-
-            //string userSecret = Configuration["client_id"];
-
+            // Add service and create Policy with options
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,7 +49,11 @@ namespace bimsyncManagerAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            // global policy - assign here or on each controller
+            app.UseCors("CorsPolicy");
+
             app.UseMvc();
+
         }
     }
 }

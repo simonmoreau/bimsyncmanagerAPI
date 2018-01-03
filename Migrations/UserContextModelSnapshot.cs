@@ -25,6 +25,8 @@ namespace bimsyncManagerAPI.Migrations
 
                     b.Property<string>("AccessToken");
 
+                    b.Property<string>("BCFToken");
+
                     b.Property<string>("Name");
 
                     b.Property<string>("PowerBiSecret");

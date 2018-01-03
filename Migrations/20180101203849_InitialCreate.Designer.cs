@@ -10,7 +10,7 @@ using System;
 namespace bimsyncManagerAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20171227083946_InitialCreate")]
+    [Migration("20180101203849_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,8 @@ namespace bimsyncManagerAPI.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("AccessToken");
+
+                    b.Property<string>("BCFToken");
 
                     b.Property<string>("Name");
 

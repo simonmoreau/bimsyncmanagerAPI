@@ -15,6 +15,7 @@ namespace bimsyncManagerAPI.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     AccessToken = table.Column<string>(nullable: true),
+                    BCFToken = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     PowerBiSecret = table.Column<string>(nullable: true),
                     RefreshDate = table.Column<string>(nullable: true),

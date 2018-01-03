@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Configuration;
 
 namespace bimsyncManagerAPI.Services
@@ -21,5 +22,17 @@ namespace bimsyncManagerAPI.Services
         public string refresh_token { get; set; }
         public string token_type { get; set; }
         public int expires_in { get; set; }
+    }
+    public class BCFToken
+    {
+        public string access_token { get; set; }
+        public string token_type { get; set; }
+    }
+    public class bimsyncUser
+    {
+        public string createdAt { get; set; }
+        public string id { get; set; }
+        public string name { get; set; }
+        public string username { get; set; }
     }
 }
