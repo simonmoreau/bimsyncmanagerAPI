@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace bimsyncManagerAPI.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -18,7 +18,7 @@ namespace bimsyncManagerAPI.Migrations
                     BCFToken = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     PowerBiSecret = table.Column<string>(nullable: true),
-                    RefreshDate = table.Column<string>(nullable: true),
+                    RefreshDate = table.Column<DateTime>(nullable: false),
                     RefreshToken = table.Column<string>(nullable: true),
                     TokenExpireIn = table.Column<int>(nullable: true),
                     TokenType = table.Column<string>(nullable: true),

@@ -5,13 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
 
 namespace bimsyncManagerAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20180101203849_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20180105210426_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,7 +33,7 @@ namespace bimsyncManagerAPI.Migrations
 
                     b.Property<string>("PowerBiSecret");
 
-                    b.Property<string>("RefreshDate");
+                    b.Property<DateTime>("RefreshDate");
 
                     b.Property<string>("RefreshToken");
 

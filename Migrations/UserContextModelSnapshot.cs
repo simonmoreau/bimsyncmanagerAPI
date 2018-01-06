@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
 
 namespace bimsyncManagerAPI.Migrations
@@ -31,7 +32,7 @@ namespace bimsyncManagerAPI.Migrations
 
                     b.Property<string>("PowerBiSecret");
 
-                    b.Property<string>("RefreshDate");
+                    b.Property<DateTime>("RefreshDate");
 
                     b.Property<string>("RefreshToken");
 

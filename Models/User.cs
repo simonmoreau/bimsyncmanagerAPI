@@ -10,7 +10,7 @@ namespace bimsyncManagerAPI.Models
         public string TokenType{get;set;}
         public int? TokenExpireIn{get;set;}
         public string RefreshToken{get;set;}
-        public string RefreshDate{get;set;}
+        public System.DateTime RefreshDate{get;set;}
         public string BCFToken{get;set;}
 
 
