@@ -25,8 +25,9 @@ namespace bimsyncManagerAPI
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, UserContext context)
         {
+            
             services.AddDbContext<UserContext>(opt => opt.UseSqlite("Data Source=users.db"));
             services.AddMvc();
             services.AddSingleton<IConfiguration>(Configuration);
@@ -39,6 +40,8 @@ namespace bimsyncManagerAPI
                     .AllowAnyHeader()
                     .AllowCredentials());
             });
+
+            context.Database.Migrate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
