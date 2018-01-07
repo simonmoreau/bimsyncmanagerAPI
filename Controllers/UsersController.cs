@@ -30,11 +30,11 @@ namespace bimsyncManagerAPI.Controllers
             }
         }
 
- /*        [HttpGet]
+        [HttpGet]
         public IEnumerable<User> GetAll()
         {
             return _context.Users.ToList();
-        } */
+        }
 
         [HttpGet("{id}", Name = "GetUser")]
         public IActionResult GetById(string id)
