@@ -21,7 +21,7 @@ namespace bimsyncManagerAPI.Migrations
 
             modelBuilder.Entity("bimsyncManagerAPI.Models.User", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("AccessToken");

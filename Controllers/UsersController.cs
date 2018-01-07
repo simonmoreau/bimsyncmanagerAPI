@@ -30,14 +30,14 @@ namespace bimsyncManagerAPI.Controllers
             }
         }
 
-        [HttpGet]
+ /*        [HttpGet]
         public IEnumerable<User> GetAll()
         {
             return _context.Users.ToList();
-        }
+        } */
 
         [HttpGet("{id}", Name = "GetUser")]
-        public IActionResult GetById(long id)
+        public IActionResult GetById(string id)
         {
             var item = _context.Users.FirstOrDefault(t => t.Id == id);
             if (item == null)
@@ -64,6 +64,7 @@ namespace bimsyncManagerAPI.Controllers
             {
                 user = new User
                 {
+                    Id = System.Guid.NewGuid().ToString(),
                     Name = bsUser.name,
                     bimsync_id = bsUser.id,
                     PowerBiSecret = System.Guid.NewGuid().ToString(),
@@ -94,7 +95,7 @@ namespace bimsyncManagerAPI.Controllers
         }
 
         [HttpGet("bcf/{id}")]
-        public IActionResult GetBCFToken([FromQuery]string code, long id)
+        public IActionResult GetBCFToken([FromQuery]string code, string id)
         {
             User user = _context.Users.FirstOrDefault(t => t.Id == id);
             if (user == null)
@@ -116,7 +117,7 @@ namespace bimsyncManagerAPI.Controllers
         }
 
         [HttpGet("refresh/{id}")]
-        public IActionResult RefrechToken(long id)
+        public IActionResult RefrechToken(string id)
         {
             User user = _context.Users.FirstOrDefault(t => t.Id == id);
             if (user == null)
@@ -137,6 +138,33 @@ namespace bimsyncManagerAPI.Controllers
 
             return new ObjectResult(user);
         }
+
+        [HttpGet("powerbi")]
+        public IActionResult GetPBToken([FromQuery]string PBCode)
+        {
+            User user = _context.Users.FirstOrDefault(t => t.PowerBiSecret == PBCode);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (user.RefreshDate < DateTime.Now)
+            {
+                AccessToken accessToken = RefreshAccessToken(user.RefreshToken).Result;
+
+                user.AccessToken = accessToken.access_token;
+                user.TokenExpireIn = accessToken.expires_in;
+                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                user.TokenType = accessToken.token_type;
+                user.RefreshToken = accessToken.refresh_token;
+
+                _context.Users.Update(user);
+                _context.SaveChanges();
+            }
+
+            return new ObjectResult(user.AccessToken);
+        }
+
         private async Task<AccessToken> ObtainAccessToken(string authorization_code)
         {
             string callbackUri = "http://localhost:4200/callback";

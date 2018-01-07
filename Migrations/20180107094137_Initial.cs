@@ -12,8 +12,7 @@ namespace bimsyncManagerAPI.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<string>(nullable: false),
                     AccessToken = table.Column<string>(nullable: true),
                     BCFToken = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),

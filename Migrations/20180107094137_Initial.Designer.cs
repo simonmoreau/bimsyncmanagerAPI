@@ -11,7 +11,7 @@ using System;
 namespace bimsyncManagerAPI.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20180105210426_Initial")]
+    [Migration("20180107094137_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,7 +22,7 @@ namespace bimsyncManagerAPI.Migrations
 
             modelBuilder.Entity("bimsyncManagerAPI.Models.User", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("AccessToken");
