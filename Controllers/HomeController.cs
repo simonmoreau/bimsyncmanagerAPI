@@ -22,14 +22,27 @@ namespace bimsyncManagerAPI.Controllers
         {
             _context = context;
             Configuration = configuration;
-
         }
 
-                [HttpGet]
+        [HttpGet]
         public IEnumerable<string> Get()
         {
             return new string[] { "Welcome to the bimsyncManager API" };
         }
 
+        [HttpGet("check")]
+        public string Check()
+        {
+            try
+            {
+                string client_id = Configuration["client_id"];
+                string client_secret = Configuration["client_secret"];
+                return "Ok";
+            }
+            catch
+            {
+                return "Failed";
+            }
+        }
     }
 }
