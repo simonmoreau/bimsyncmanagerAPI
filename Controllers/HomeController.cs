@@ -37,7 +37,7 @@ namespace bimsyncManagerAPI.Controllers
             {
                 string client_id = Configuration["client_id"];
                 string client_secret = Configuration["client_secret"];
-                return "Ok";
+                return client_id + " - " + client_secret;
             }
             catch
             {
