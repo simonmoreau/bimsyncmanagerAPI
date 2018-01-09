@@ -54,10 +54,16 @@ namespace bimsyncManagerAPI.Controllers
             {
                 return BadRequest();
             }
+            AccessToken accessToken = new AccessToken();
 
             try{
-
-            AccessToken accessToken = ObtainAccessToken(code).Result;
+                accessToken = ObtainAccessToken(code).Result;
+            }
+            catch (Exception e)
+            {
+                return new ObjectResult(e.Message);
+            }
+            
             bimsyncUser bsUser = GetCurrentUser(accessToken).Result;
             //BCFToken bcfAccessToken = ObtainBCFToken(codeBCF).Result;
 
@@ -94,11 +100,6 @@ namespace bimsyncManagerAPI.Controllers
             }
 
             return CreatedAtRoute("GetUser", new { id = user.Id }, user);
-                        }
-            catch (Exception e)
-            {
-             return new BadRequestObjectResult(e.Message);
-            }
         }
 
         [HttpGet("bcf/{id}")]
@@ -192,11 +193,19 @@ namespace bimsyncManagerAPI.Controllers
 
             HttpResponseMessage response = await client.PostAsync(clientURL, body);
 
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
-
             //response.EnsureSuccessStatusCode();
 
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                Stream errorStream = await response.Content.ReadAsStreamAsync();
+                StreamReader reader = new StreamReader( errorStream );
+                string text = reader.ReadToEnd();
+                throw new Exception(text);
+            }
+
             Stream responseStream = await response.Content.ReadAsStreamAsync();
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
 
             AccessToken accessToken = serializer.ReadObject(responseStream) as AccessToken;
 
