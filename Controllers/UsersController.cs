@@ -52,7 +52,7 @@ namespace bimsyncManagerAPI.Controllers
         {
             if (code == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             try{
@@ -194,7 +194,7 @@ namespace bimsyncManagerAPI.Controllers
 
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
 
-            response.EnsureSuccessStatusCode();
+            //response.EnsureSuccessStatusCode();
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
