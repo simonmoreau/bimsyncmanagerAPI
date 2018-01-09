@@ -52,7 +52,7 @@ namespace bimsyncManagerAPI.Controllers
         {
             if (code == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
             try{
