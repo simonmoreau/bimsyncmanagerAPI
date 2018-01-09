@@ -194,7 +194,7 @@ namespace bimsyncManagerAPI.Controllers
 
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
 
-            //response.EnsureSuccessStatusCode();
+            response.EnsureSuccessStatusCode();
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
@@ -247,7 +247,7 @@ namespace bimsyncManagerAPI.Controllers
 
             HttpResponseMessage response = await client.PostAsync(clientURL, body);
 
-            response.EnsureSuccessStatusCode();
+            //response.EnsureSuccessStatusCode();
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
