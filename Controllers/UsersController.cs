@@ -55,6 +55,8 @@ namespace bimsyncManagerAPI.Controllers
                 return BadRequest();
             }
 
+            try{
+
             AccessToken accessToken = ObtainAccessToken(code).Result;
             bimsyncUser bsUser = GetCurrentUser(accessToken).Result;
             //BCFToken bcfAccessToken = ObtainBCFToken(codeBCF).Result;
@@ -92,6 +94,11 @@ namespace bimsyncManagerAPI.Controllers
             }
 
             return CreatedAtRoute("GetUser", new { id = user.Id }, user);
+                        }
+            catch (Exception e)
+            {
+             return new BadRequestObjectResult(e.Message);
+            }
         }
 
         [HttpGet("bcf/{id}")]
