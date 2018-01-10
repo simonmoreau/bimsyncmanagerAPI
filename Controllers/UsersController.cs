@@ -30,17 +30,17 @@ namespace bimsyncManagerAPI.Controllers
             }
         }
 
-/*         [HttpGet]
+        [HttpGet]
         public IEnumerable<User> GetAll()
         {
             return _context.Users.ToList();
-        } */
-
-                [HttpGet]
-        public string GetAll()
-        {
-            return $"You have {_context.Users.ToList().Count} registred users";
         }
+
+        /*                 [HttpGet]
+                public string GetAll()
+                {
+                    return $"You have {_context.Users.ToList().Count} registred users";
+                } */
 
         [HttpGet("{id}", Name = "GetUser")]
         public IActionResult GetById(string id)
@@ -54,7 +54,7 @@ namespace bimsyncManagerAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromQuery]string code,[FromBody]string callbackUri)
+        public IActionResult Create([FromQuery]string code, [FromBody]string callbackUri)
         {
             if (code == null)
             {
@@ -198,7 +198,7 @@ namespace bimsyncManagerAPI.Controllers
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
                 Stream errorStream = await response.Content.ReadAsStreamAsync();
-                StreamReader reader = new StreamReader( errorStream );
+                StreamReader reader = new StreamReader(errorStream);
                 string text = reader.ReadToEnd();
                 throw new Exception(text);
             }
@@ -286,6 +286,89 @@ namespace bimsyncManagerAPI.Controllers
             bimsyncUser bimsyncUser = serializer.ReadObject(responseStream) as bimsyncUser;
 
             return bimsyncUser;
+        }
+
+        // GET api/users/pages
+        [HttpGet("pages")]
+        public IActionResult Get([FromQuery]string PBCode, [FromQuery]string ressource, [FromQuery]string revision)
+        {
+            if (ressource == null)
+            {
+                return BadRequest();
+            }
+
+            User user = _context.Users.FirstOrDefault(t => t.PowerBiSecret == PBCode);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (user.RefreshDate < DateTime.Now)
+            {
+                AccessToken accessToken = RefreshAccessToken(user.RefreshToken).Result;
+
+                user.AccessToken = accessToken.access_token;
+                user.TokenExpireIn = accessToken.expires_in;
+                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                user.TokenType = accessToken.token_type;
+                user.RefreshToken = accessToken.refresh_token;
+
+                _context.Users.Update(user);
+                _context.SaveChanges();
+            }
+
+            string test = GetPageNumber(ressource, "", user.AccessToken).Result;
+
+            return new ObjectResult(test);
+        }
+
+        private async Task<string> GetPageNumber(string ressource, string revision, string access_token)
+        {
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://api.bimsync.com/v2/");
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
+
+            string query = "";
+            if (ressource.Contains("?"))
+            {
+                query = ressource + "&page=1&pageSize=1";
+            }
+            else
+            {
+                query = ressource + "?page=1&pageSize=1";
+            }
+            if (revision != null && revision != "") query = query + "&revision=" + revision;
+
+            HttpResponseMessage response = await client.GetAsync(query);
+
+            // parse response headers 
+            KeyValuePair<string, IEnumerable<string>> link = response.Headers
+               .FirstOrDefault(q => string.Compare(q.Key, "Link", true) == 0);
+
+            if (link.Key == null) return "999";
+
+            string linkValue = link.Value.FirstOrDefault().ToString();
+            string[] values = linkValue.Split(',');
+            string url = values.FirstOrDefault(x => x.Contains("rel=\"last\""));
+
+            int pFrom = url.IndexOf("&page=") + "&page=".Length;
+            int pTo = 0;
+            if (url.IndexOf("&", pFrom) != -1)
+            {
+                pTo = url.IndexOf("&", pFrom);
+            }
+            else
+            {
+                pTo = url.IndexOf(">", pFrom);
+            }
+
+            if (pTo == 0) return null;
+
+            String result = url.Substring(pFrom, pTo - pFrom);
+
+            return result;
+
         }
     }
 }
