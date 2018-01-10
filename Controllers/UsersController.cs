@@ -30,10 +30,16 @@ namespace bimsyncManagerAPI.Controllers
             }
         }
 
-        [HttpGet]
+/*         [HttpGet]
         public IEnumerable<User> GetAll()
         {
             return _context.Users.ToList();
+        } */
+
+                [HttpGet]
+        public string GetAll()
+        {
+            return $"You have {_context.Users.ToList().Count} registred users";
         }
 
         [HttpGet("{id}", Name = "GetUser")]
@@ -48,22 +54,18 @@ namespace bimsyncManagerAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromQuery]string code)
+        public IActionResult Create([FromQuery]string code,[FromBody]string callbackUri)
         {
             if (code == null)
             {
                 return BadRequest();
             }
-            AccessToken accessToken = new AccessToken();
-
-            try{
-                accessToken = ObtainAccessToken(code).Result;
-            }
-            catch (Exception e)
+            if (callbackUri == null)
             {
-                return new ObjectResult(e.Message);
+                return BadRequest();
             }
-            
+
+            AccessToken accessToken = accessToken = ObtainAccessToken(code, callbackUri).Result;
             bimsyncUser bsUser = GetCurrentUser(accessToken).Result;
             //BCFToken bcfAccessToken = ObtainBCFToken(codeBCF).Result;
 
@@ -173,10 +175,8 @@ namespace bimsyncManagerAPI.Controllers
             return new ObjectResult(user.AccessToken);
         }
 
-        private async Task<AccessToken> ObtainAccessToken(string authorization_code)
+        private async Task<AccessToken> ObtainAccessToken(string authorization_code, string callbackUri)
         {
-            string callbackUri = "http://localhost:4200/callback";
-
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
