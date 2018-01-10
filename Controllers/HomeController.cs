@@ -35,6 +35,8 @@ namespace bimsyncManagerAPI.Controllers
         {
             try
             {
+                Configuration["client_id"] = Environment.GetEnvironmentVariable("APPSETTING_client_id");
+                Configuration["client_secret"] = Environment.GetEnvironmentVariable("APPSETTING_client_secret");
                 string client_id = Configuration["client_id"];
                 string client_secret = Configuration["client_secret"];
                 return client_id + " - " + client_secret;
