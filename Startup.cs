@@ -19,6 +19,7 @@ namespace bimsyncManagerAPI
                 builder.AddUserSecrets<Startup>();
             }
 
+            builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
 
