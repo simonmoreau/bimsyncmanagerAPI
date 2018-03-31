@@ -158,18 +158,46 @@ namespace bimsyncManagerAPI.Controllers
                 return NotFound();
             }
 
+            // Check if the token must be refreshed
             if (user.RefreshDate < DateTime.Now)
             {
-                AccessToken accessToken = RefreshAccessToken(user.RefreshToken).Result;
+                //Check if the refresh process is already started
+                if (user.RefreshDate == new DateTime(1970,1, 1))
+                {
+                    //If the refresh process is already started, wait for it to finish
+                    while (user.RefreshDate == new DateTime(1970,1, 1))
+                    {
+                        System.Threading.Thread.Sleep(200);
+                        user = _context.Users.FirstOrDefault(t => t.PowerBiSecret == PBCode);
+                    }
+                }
+                else
+                {
+                    //If the refresh process is not started, start it
+                    //We mark it as started with the RefreshDate
+                    user.RefreshDate = new DateTime(1970,1, 1);
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
 
-                user.AccessToken = accessToken.access_token;
-                user.TokenExpireIn = accessToken.expires_in;
-                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
-                user.TokenType = accessToken.token_type;
-                user.RefreshToken = accessToken.refresh_token;
+                    //Then we refresh it
+                    AccessToken accessToken = RefreshAccessToken(user.RefreshToken).Result;
 
-                _context.Users.Update(user);
-                _context.SaveChanges();
+                    //If the token is not valid, we try again on time
+                    if (accessToken.access_token == null)
+                    {
+                        accessToken = RefreshAccessToken(user.RefreshToken).Result;
+                    }
+
+                    user.AccessToken = accessToken.access_token;
+                    user.TokenExpireIn = accessToken.expires_in;
+                    user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                    user.TokenType = accessToken.token_type;
+                    user.RefreshToken = accessToken.refresh_token;
+
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+                }
+
             }
 
             return new ObjectResult(user.AccessToken);
