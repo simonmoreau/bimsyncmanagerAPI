@@ -93,7 +93,7 @@ namespace bimsyncManagerAPI.Controllers
             {
                 user.AccessToken = accessToken.access_token;
                 user.TokenExpireIn = accessToken.expires_in;
-                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, 20);
                 user.TokenType = accessToken.token_type;
                 user.RefreshToken = accessToken.refresh_token;
 
@@ -139,7 +139,7 @@ namespace bimsyncManagerAPI.Controllers
 
             user.AccessToken = accessToken.access_token;
             user.TokenExpireIn = accessToken.expires_in;
-            user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+            user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, 20);
             user.TokenType = accessToken.token_type;
             user.RefreshToken = accessToken.refresh_token;
 
@@ -181,7 +181,7 @@ namespace bimsyncManagerAPI.Controllers
 
                     user.AccessToken = accessToken.access_token;
                     user.TokenExpireIn = accessToken.expires_in;
-                    user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                    user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, 20);
                     user.TokenType = accessToken.token_type;
                     user.RefreshToken = accessToken.refresh_token;
 
@@ -334,7 +334,7 @@ namespace bimsyncManagerAPI.Controllers
 
                 user.AccessToken = accessToken.access_token;
                 user.TokenExpireIn = accessToken.expires_in;
-                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, accessToken.expires_in);
+                user.RefreshDate = System.DateTime.Now + new System.TimeSpan(0, 0, 20);
                 user.TokenType = accessToken.token_type;
                 user.RefreshToken = accessToken.refresh_token;
 
