@@ -65,7 +65,7 @@ namespace bimsyncManagerAPI.Controllers
                 return BadRequest();
             }
 
-            AccessToken accessToken = accessToken = ObtainAccessToken(code, callbackUri).Result;
+            AccessToken accessToken = ObtainAccessToken(code, callbackUri).Result;
             bimsyncUser bsUser = GetCurrentUser(accessToken).Result;
             //BCFToken bcfAccessToken = ObtainBCFToken(codeBCF).Result;
 
@@ -162,31 +162,22 @@ namespace bimsyncManagerAPI.Controllers
             if (user.RefreshDate < DateTime.Now)
             {
                 //Check if the refresh process is already started
-                if (user.RefreshDate == new DateTime(1970,1, 1))
+                if (user.RefreshDate == new DateTime(1970, 1, 1))
                 {
                     //If the refresh process is already started, wait for it to finish
-                    while (user.RefreshDate == new DateTime(1970,1, 1))
-                    {
-                        System.Threading.Thread.Sleep(200);
-                        user = _context.Users.FirstOrDefault(t => t.PowerBiSecret == PBCode);
-                    }
+                    System.Threading.Thread.Sleep(2000);
+                    user = _context.Users.FirstOrDefault(t => t.PowerBiSecret == PBCode);
                 }
                 else
                 {
                     //If the refresh process is not started, start it
                     //We mark it as started with the RefreshDate
-                    user.RefreshDate = new DateTime(1970,1, 1);
+                    user.RefreshDate = new DateTime(1970, 1, 1);
                     _context.Users.Update(user);
                     _context.SaveChanges();
 
                     //Then we refresh it
                     AccessToken accessToken = RefreshAccessToken(user.RefreshToken).Result;
-
-                    //If the token is not valid, we try again on time
-                    if (accessToken.access_token == null)
-                    {
-                        accessToken = RefreshAccessToken(user.RefreshToken).Result;
-                    }
 
                     user.AccessToken = accessToken.access_token;
                     user.TokenExpireIn = accessToken.expires_in;
@@ -257,9 +248,15 @@ namespace bimsyncManagerAPI.Controllers
 
             HttpResponseMessage response = await client.PostAsync(clientURL, body);
 
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                Stream errorStream = await response.Content.ReadAsStreamAsync();
+                StreamReader reader = new StreamReader(errorStream);
+                string text = reader.ReadToEnd();
+                throw new Exception(text);
+            }
 
-            //response.EnsureSuccessStatusCode();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AccessToken));
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
