@@ -47,5 +47,14 @@ namespace bimsyncManagerAPI.Controllers
                 return "Failed";
             }
         }
+
+        [HttpGet("test")]
+        public async Task<string> test()
+        {
+            bimsyncController test = new bimsyncController(Configuration);
+            await test.GetProjects();
+
+            return "complete";
+        }
     }
 }
