@@ -26,7 +26,7 @@ namespace bimsyncManagerAPI.Controllers
         private IConfiguration Configuration { get; set; }
         public bimsyncController(IConfiguration configuration)
         {
-            this.access_token = "NQ08dS7iZJNN3YCJB88pt4";
+            this.access_token = "NuMDHaEQbBjtz8Ot1Fd6Xh";
             Configuration = configuration;
         }
 
@@ -39,10 +39,27 @@ namespace bimsyncManagerAPI.Controllers
             //Create a list of elements
             List<Data.Element> elements = new List<Data.Element>();
 
+            List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
+
             for (int i = 1; i < pageNumber; i++)
             {
                 string requestUrl = baseUrl + "&page=" + i.ToString();
-                List<bimsync.IfcElement> ifcElements = await GetRessource(requestUrl);
+                Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
+                downloadIfcElementsTasks.Add(downloadIfcElementsTask);
+            }
+
+            // ***Add a loop to process the tasks one at a time until none remain.  
+            while (downloadIfcElementsTasks.Count > 0)
+            {
+                // Identify the first task that completes.  
+                Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
+
+                // ***Remove the selected task from the list so that you don't  
+                // process it more than once.  
+                downloadIfcElementsTasks.Remove(firstFinishedTask);
+
+                // Await the completed task.  
+                List<bimsync.IfcElement> ifcElements = await firstFinishedTask;
 
                 //For each element
                 foreach (bimsync.IfcElement ifcElement in ifcElements)
@@ -52,11 +69,11 @@ namespace bimsyncManagerAPI.Controllers
                     element.ifcType = ifcElement.ifcType;
                     element.revisionId = ifcElement.revisionId;
                     element.objectId = ifcElement.objectId;
-                    element.type = "";//ifcElement.type.objectId.ToString();
+                    element.type = "";
 
                     if (ifcElement.type != null)
                     {
-                        bimsync.IfcElement test = ifcElement.type;
+                        element.type = ifcElement.type.objectId.ToString();
                     }
 
                     List<Data.Property> properties = new List<Data.Property>();
@@ -64,8 +81,11 @@ namespace bimsyncManagerAPI.Controllers
 
                     element.properties = properties;
                     elements.Add(element);
-                }
 
+                    string path = @"C:\Users\Simon\Github\bimsyncmanagerAPI\log.txt";
+                    File.AppendAllText(path,DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                 CultureInfo.InvariantCulture) + "\r\n");
+                }
             }
         }
 
@@ -104,8 +124,8 @@ namespace bimsyncManagerAPI.Controllers
         {
             int pageNumber = 1;
             MyProxy proxy = new MyProxy("http://proxymon.bouygues-immobilier.com:8080", Configuration);
-            
-            
+
+
             HttpClientHandler httpClientHandler = new HttpClientHandler();
 
             if (useProxy)
