@@ -48,64 +48,46 @@ namespace bimsyncManagerAPI.bimsync
         public string revisionId { get; set; }
         public long objectId { get; set; }
         public string ifcType { get; set; }
-        public Attributes attributes { get; set; }
-        public object type { get; set; }
+        public object attributes { get; set; }
+        public IfcElement type { get; set; }
         public object propertySets { get; set; }
         public object quantitySets { get; set; }
         public List<object> materials { get; set; }
     }
 
-    public class Attributes
+    public class Set
     {
-        public GlobalId GlobalId { get; set; }
-        public Name Name { get; set; }
-        public ObjectType ObjectType { get; set; }
-        public Tag Tag { get; set; }
-        public PredefinedType PredefinedType { get; set; }
+        public string Name { get; set; }
+        public string revisionId { get; set; }
+        public long objectId { get; set; }
+        public string ifcType { get; set; }
+        public object attributes { get; set; }
+        public object properties { get; set; }
     }
 
-    public class GlobalId
+    public class Property
+    {
+        public string Name { get; set; }
+        public string description { get; set; }
+        public string ifcType { get; set; }
+        public Value value { get; set; }
+        public Value nominalValue { get; set; }
+    }
+
+        public class AttributeProperty
+    {
+        public string Name { get; set; }
+        public string type { get; set; }
+        public string ifcType { get; set; }
+        public object value { get; set; }
+    }
+
+    public class Value
     {
         public string type { get; set; }
         public string ifcType { get; set; }
         public string value { get; set; }
+        public string unit { get; set; }
     }
 
-    public class Name
-    {
-        public string type { get; set; }
-        public string ifcType { get; set; }
-        public string value { get; set; }
-    }
-
-    public class ObjectType
-    {
-        public string type { get; set; }
-        public string ifcType { get; set; }
-        public string value { get; set; }
-    }
-
-    public class Tag
-    {
-        public string type { get; set; }
-        public string ifcType { get; set; }
-        public string value { get; set; }
-    }
-
-    public class PredefinedType
-    {
-        public string type { get; set; }
-        public string ifcType { get; set; }
-        public string value { get; set; }
-    }
-
-    public class PropertySets
-    {
-        public object PropertySetsList { get; set; }
-    }
-
-    public class QuantitySets
-    {
-        public object QuantitySetsList { get; set; }
-    }
 }
