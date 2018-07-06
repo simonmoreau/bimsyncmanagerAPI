@@ -22,30 +22,39 @@ namespace bimsyncManagerAPI.Controllers
     public class bimsyncController
     {
         string access_token;
-        bool useProxy = false;
+        bool useProxy = true;
         private IConfiguration Configuration { get; set; }
+
+        private List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
+        private string header = "revisionId;objectId;ifcType;type";
         public bimsyncController(IConfiguration configuration)
         {
-            this.access_token = "NuMDHaEQbBjtz8Ot1Fd6Xh";
+            this.access_token = "FxOSGL7huQEgmuMuUYC4s5";
             Configuration = configuration;
         }
 
         public async Task GetProjects()
         {
-
+            string path = @"C:\Users\smoreau\Documents\log.txt";
+            string outputPath = @"C:\Users\smoreau\Documents\output.txt";
+            File.AppendAllText(outputPath, header + "\r\n");
             string baseUrl = @"https://api.bimsync.com/v2/projects/134c9142631f4b9c8cb905653f54e44b/ifc/products?pageSize=1000";
             int pageNumber = await GetPageNumber(baseUrl);
 
             //Create a list of elements
             List<Data.Element> elements = new List<Data.Element>();
+            //Create a list of property definitions (=columns)
+            List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
 
             List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
+            List<Data.Task> customTasks = new List<Data.Task>();
 
-            for (int i = 1; i < pageNumber; i++)
+            for (int i = 1; i < 10; i++)
             {
                 string requestUrl = baseUrl + "&page=" + i.ToString();
                 Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
                 downloadIfcElementsTasks.Add(downloadIfcElementsTask);
+                customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
             }
 
             // ***Add a loop to process the tasks one at a time until none remain.  
@@ -53,6 +62,14 @@ namespace bimsyncManagerAPI.Controllers
             {
                 // Identify the first task that completes.  
                 Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
+
+                //Write it
+                Data.Task customTask = customTasks.Where(t => t.AsyncTask == firstFinishedTask).FirstOrDefault();
+                if (customTask != null)
+                {
+                    File.AppendAllText(path, customTask.url + "\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+CultureInfo.InvariantCulture) + "\r\n");
+                }
 
                 // ***Remove the selected task from the list so that you don't  
                 // process it more than once.  
@@ -76,17 +93,38 @@ namespace bimsyncManagerAPI.Controllers
                         element.type = ifcElement.type.objectId.ToString();
                     }
 
-                    List<Data.Property> properties = new List<Data.Property>();
-                    properties.AddRange(GetIfcElementProperties(ifcElement));
+                    element.properties = GetIfcElementProperties(ifcElement);
+                    propertyDefinitions = UpdatePropertyDefinitions(element.GetPropertyDefinitions(), propertyDefinitions);
+                    //elements.Add(element);
 
-                    element.properties = properties;
-                    elements.Add(element);
+                    File.AppendAllText(outputPath, element.ToString(propertyDefinitions) + "\r\n");
+                }
 
-                    string path = @"C:\Users\Simon\Github\bimsyncmanagerAPI\log.txt";
-                    File.AppendAllText(path,DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
-                                 CultureInfo.InvariantCulture) + "\r\n");
+                File.AppendAllText(path, ifcElements.Count.ToString() + " have been processed\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                             CultureInfo.InvariantCulture) + "\r\n");
+            }
+
+            File.AppendAllText(outputPath, header + "\r\n");
+        }
+
+        private List<Data.PropertyDefinition> UpdatePropertyDefinitions(List<Data.PropertyDefinition> newPropertyDefinitionsValues, List<Data.PropertyDefinition> initialPropertyDefinitions)
+        {
+            Data.PropertyDefinitionEqualityComparer comparer = new Data.PropertyDefinitionEqualityComparer();
+
+            foreach (Data.PropertyDefinition newValue in newPropertyDefinitionsValues)
+            {
+                if (!initialPropertyDefinitions.Contains(newValue, comparer))
+                {
+                    initialPropertyDefinitions.Add(newValue);
+                    header = header + ";" + newValue.Name;
+                    if (!string.IsNullOrEmpty(newValue.Unit))
+                    {
+                        header = header + " (" + newValue.Unit + ")";
+                    }
                 }
             }
+
+            return initialPropertyDefinitions;
         }
 
         private async Task<List<bimsync.IfcElement>> GetRessource(string url)
@@ -152,7 +190,6 @@ namespace bimsyncManagerAPI.Controllers
             if (match.Success)
             {
                 int.TryParse(match.Value.Replace("page=", "").Trim('>'), out pageNumber);
-
             }
 
             return pageNumber;
@@ -170,7 +207,16 @@ namespace bimsyncManagerAPI.Controllers
 
             //Loop on quantity sets
             JObject quantitySets = IfcElement.quantitySets as JObject;
-            if (quantitySets != null) { dataProperties.AddRange(GetProperties(quantitySets)); }
+            if (quantitySets != null)
+            {
+                if (quantitySets.Children().Count() != 0)
+                {
+                    dataProperties.AddRange(GetProperties(quantitySets));
+                }
+            }
+
+            //if (quantitySets != null) {  }
+
 
             //Loop on attributes
             JObject attributes = IfcElement.attributes as JObject;
@@ -206,6 +252,7 @@ namespace bimsyncManagerAPI.Controllers
                 set.Name = jToken.Path;
 
                 JObject properties = set.properties as JObject;
+                if (properties == null) { properties = set.quantities as JObject; }
 
                 if (properties != null)
                 {

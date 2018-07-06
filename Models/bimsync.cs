@@ -63,6 +63,7 @@ namespace bimsyncManagerAPI.bimsync
         public string ifcType { get; set; }
         public object attributes { get; set; }
         public object properties { get; set; }
+        public object quantities { get; set; }
     }
 
     public class Property
