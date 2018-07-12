@@ -22,14 +22,14 @@ namespace bimsyncManagerAPI.Controllers
     public class bimsyncController
     {
         string access_token;
-        bool useProxy = true;
+        bool useProxy = false;
         private IConfiguration Configuration { get; set; }
 
         private List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
         private string header = "revisionId;objectId;ifcType;type";
         public bimsyncController(IConfiguration configuration)
         {
-            this.access_token = "FxOSGL7huQEgmuMuUYC4s5";
+            this.access_token = "XYD2G24HTlPgfw6aet6ZbX";
             Configuration = configuration;
         }
 
@@ -37,6 +37,7 @@ namespace bimsyncManagerAPI.Controllers
         {
             string path = @"C:\Users\smoreau\Documents\log.txt";
             string outputPath = @"C:\Users\smoreau\Documents\output.txt";
+
             File.AppendAllText(outputPath, header + "\r\n");
             string baseUrl = @"https://api.bimsync.com/v2/projects/134c9142631f4b9c8cb905653f54e44b/ifc/products?pageSize=1000";
             int pageNumber = await GetPageNumber(baseUrl);
@@ -46,63 +47,67 @@ namespace bimsyncManagerAPI.Controllers
             //Create a list of property definitions (=columns)
             List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
 
-            List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
-            List<Data.Task> customTasks = new List<Data.Task>();
-
-            for (int i = 1; i < 10; i++)
+            for (int j = 1; j < pageNumber; j = j + 10)
             {
-                string requestUrl = baseUrl + "&page=" + i.ToString();
-                Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
-                downloadIfcElementsTasks.Add(downloadIfcElementsTask);
-                customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
-            }
+                List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
+                List<Data.Task> customTasks = new List<Data.Task>();
 
-            // ***Add a loop to process the tasks one at a time until none remain.  
-            while (downloadIfcElementsTasks.Count > 0)
-            {
-                // Identify the first task that completes.  
-                Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
-
-                //Write it
-                Data.Task customTask = customTasks.Where(t => t.AsyncTask == firstFinishedTask).FirstOrDefault();
-                if (customTask != null)
+                for (int i = j; i < j + 10; i++)
                 {
-                    File.AppendAllText(path, customTask.url + "\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
-CultureInfo.InvariantCulture) + "\r\n");
+                    string requestUrl = baseUrl + "&page=" + i.ToString();
+                    Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
+                    downloadIfcElementsTasks.Add(downloadIfcElementsTask);
+                    customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
                 }
 
-                // ***Remove the selected task from the list so that you don't  
-                // process it more than once.  
-                downloadIfcElementsTasks.Remove(firstFinishedTask);
-
-                // Await the completed task.  
-                List<bimsync.IfcElement> ifcElements = await firstFinishedTask;
-
-                //For each element
-                foreach (bimsync.IfcElement ifcElement in ifcElements)
+                // ***Add a loop to process the tasks one at a time until none remain.  
+                while (downloadIfcElementsTasks.Count > 0)
                 {
-                    Data.Element element = new Data.Element();
+                    // Identify the first task that completes.  
+                    Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
 
-                    element.ifcType = ifcElement.ifcType;
-                    element.revisionId = ifcElement.revisionId;
-                    element.objectId = ifcElement.objectId;
-                    element.type = "";
-
-                    if (ifcElement.type != null)
+                    //Write it
+                    Data.Task customTask = customTasks.Where(t => t.AsyncTask == firstFinishedTask).FirstOrDefault();
+                    if (customTask != null)
                     {
-                        element.type = ifcElement.type.objectId.ToString();
+                        File.AppendAllText(path, customTask.url + "\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+    CultureInfo.InvariantCulture) + "\r\n");
                     }
 
-                    element.properties = GetIfcElementProperties(ifcElement);
-                    propertyDefinitions = UpdatePropertyDefinitions(element.GetPropertyDefinitions(), propertyDefinitions);
-                    //elements.Add(element);
+                    // ***Remove the selected task from the list so that you don't  
+                    // process it more than once.  
+                    downloadIfcElementsTasks.Remove(firstFinishedTask);
 
-                    File.AppendAllText(outputPath, element.ToString(propertyDefinitions) + "\r\n");
+                    // Await the completed task.  
+                    List<bimsync.IfcElement> ifcElements = await firstFinishedTask;
+
+                    //Process the received elements
+                    foreach (bimsync.IfcElement ifcElement in ifcElements)
+                    {
+                        Data.Element element = new Data.Element();
+
+                        element.ifcType = ifcElement.ifcType;
+                        element.revisionId = ifcElement.revisionId;
+                        element.objectId = ifcElement.objectId;
+                        element.type = "";
+
+                        if (ifcElement.type != null)
+                        {
+                            element.type = ifcElement.type.objectId.ToString();
+                        }
+
+                        element.properties = GetIfcElementProperties(ifcElement);
+                        propertyDefinitions = UpdatePropertyDefinitions(element.GetPropertyDefinitions(), propertyDefinitions);
+                        //elements.Add(element);
+
+                        File.AppendAllText(outputPath, element.ToString(propertyDefinitions) + "\r\n");
+                    }
+
+                    File.AppendAllText(path, ifcElements.Count.ToString() + " have been processed\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                 CultureInfo.InvariantCulture) + "\r\n");
                 }
-
-                File.AppendAllText(path, ifcElements.Count.ToString() + " have been processed\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
-                             CultureInfo.InvariantCulture) + "\r\n");
             }
+
 
             File.AppendAllText(outputPath, header + "\r\n");
         }
@@ -129,21 +134,7 @@ CultureInfo.InvariantCulture) + "\r\n");
 
         private async Task<List<bimsync.IfcElement>> GetRessource(string url)
         {
-            MyProxy proxy = new MyProxy("http://proxymon.bouygues-immobilier.com:8080", Configuration);
-
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
-
-            if (useProxy)
-            {
-                httpClientHandler.UseProxy = true;
-                httpClientHandler.Proxy = proxy;
-            };
-
-            HttpClient client = new HttpClient(httpClientHandler);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
-
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await GetResponseFromBimsync(url);
 
             Stream responseStream = await response.Content.ReadAsStreamAsync();
 
@@ -153,7 +144,6 @@ CultureInfo.InvariantCulture) + "\r\n");
             using (var jsonTextReader = new JsonTextReader(sr))
             {
                 List<bimsync.IfcElement> objects = serializer.Deserialize(jsonTextReader, typeof(List<bimsync.IfcElement>)) as List<bimsync.IfcElement>;
-
                 return objects;
             }
         }
@@ -161,22 +151,8 @@ CultureInfo.InvariantCulture) + "\r\n");
         private async Task<int> GetPageNumber(string url)
         {
             int pageNumber = 1;
-            MyProxy proxy = new MyProxy("http://proxymon.bouygues-immobilier.com:8080", Configuration);
 
-
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
-
-            if (useProxy)
-            {
-                httpClientHandler.UseProxy = true;
-                httpClientHandler.Proxy = proxy;
-            };
-
-            HttpClient client = new HttpClient(httpClientHandler);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
-
-            HttpResponseMessage response = await client.GetAsync(url);
+            HttpResponseMessage response = await GetResponseFromBimsync(url);
 
             // parse response headers
             KeyValuePair<string, IEnumerable<string>> link = response.Headers
@@ -193,7 +169,35 @@ CultureInfo.InvariantCulture) + "\r\n");
             }
 
             return pageNumber;
+        }
 
+        private async Task<HttpResponseMessage> GetResponseFromBimsync(string url)
+        {
+            MyProxy proxy = new MyProxy("http://proxymon.bouygues-immobilier.com:8080", Configuration);
+
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
+
+            if (useProxy)
+            {
+                httpClientHandler.UseProxy = true;
+                httpClientHandler.Proxy = proxy;
+            };
+
+            HttpClient client = new HttpClient(httpClientHandler);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + access_token);
+
+            HttpResponseMessage response = await client.GetAsync(url);
+            try
+            {
+                 response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + " - " + url + " - " + response.StatusCode + " - " + response.ReasonPhrase);
+            }
+           
+            return response;
         }
 
         private List<Data.Property> GetIfcElementProperties(bimsync.IfcElement IfcElement)
