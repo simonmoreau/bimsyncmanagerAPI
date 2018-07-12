@@ -41,25 +41,25 @@ namespace bimsyncManagerAPI.Controllers
             File.AppendAllText(outputPath, header + "\r\n");
             string baseUrl = @"https://api.bimsync.com/v2/projects/134c9142631f4b9c8cb905653f54e44b/ifc/products?pageSize=1000";
             int pageNumber = await GetPageNumber(baseUrl);
+            int taskNumber = 10;
 
             //Create a list of elements
             List<Data.Element> elements = new List<Data.Element>();
             //Create a list of property definitions (=columns)
             List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
 
-            for (int j = 1; j < pageNumber; j = j + 10)
+            for (int j = 1; j < pageNumber + 1; j = j + taskNumber)
             {
                 List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
                 List<Data.Task> customTasks = new List<Data.Task>();
 
-                for (int i = j; i < j + 10; i++)
+                for (int i = j; i < j + taskNumber && i < pageNumber + 1; i++)
                 {
                     string requestUrl = baseUrl + "&page=" + i.ToString();
                     Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
                     downloadIfcElementsTasks.Add(downloadIfcElementsTask);
                     customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
                 }
-
                 // ***Add a loop to process the tasks one at a time until none remain.  
                 while (downloadIfcElementsTasks.Count > 0)
                 {
@@ -106,6 +106,10 @@ namespace bimsyncManagerAPI.Controllers
                     File.AppendAllText(path, ifcElements.Count.ToString() + " have been processed\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
                                  CultureInfo.InvariantCulture) + "\r\n");
                 }
+
+                System.Threading.Thread.Sleep(60000);
+                                    File.AppendAllText(path,"Waiting for 60 s\t" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff",
+                                 CultureInfo.InvariantCulture) + "\r\n");
             }
 
 
