@@ -46,7 +46,7 @@ namespace bimsyncManagerAPI.bimsync
     public class IfcElement
     {
         public string revisionId { get; set; }
-        public long objectId { get; set; }
+        public long? objectId { get; set; }
         public string ifcType { get; set; }
         public object attributes { get; set; }
         public IfcElement type { get; set; }
