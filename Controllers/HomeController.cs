@@ -52,7 +52,7 @@ namespace bimsyncManagerAPI.Controllers
         public async Task<string> test()
         {
             bimsyncController test = new bimsyncController(Configuration);
-            await test.GetProjects();
+            await test.GetProducts();
 
             return "complete";
         }
