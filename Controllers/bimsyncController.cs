@@ -23,14 +23,15 @@ namespace bimsyncManagerAPI.Controllers
     public class bimsyncController
     {
         string access_token;
-        bool useProxy = false;
+        bool useProxy = true;
         private IConfiguration Configuration { get; set; }
 
         private List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
+
         private string header = "revisionId;objectId;ifcType;type";
         public bimsyncController(IConfiguration configuration)
         {
-this.access_token = "uo0A5p3QKzv6T295Ozkrex";
+            this.access_token = "vrlvxruX42d01cXdQG2Xxr";
             Configuration = configuration;
         }
 
@@ -61,104 +62,78 @@ this.access_token = "uo0A5p3QKzv6T295Ozkrex";
             int pageNumber = await GetPageNumber(baseUrl);
             int taskNumber = 50;
 
-                //Create a list of elements
-                List<Data.Element> elements = new List<Data.Element>();
-                //Create a list of property definitions (=columns)
-                List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
+            //Create a list of elements
+            List<Data.SortedIfcElement> elements = new List<Data.SortedIfcElement>();
+            //Create a list of property definitions (=columns)
+            List<Data.PropertyDefinition> propertyDefinitions = new List<Data.PropertyDefinition>();
 
-                List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
-                List<Data.Task> customTasks = new List<Data.Task>();
+            List<Task<List<bimsync.IfcElement>>> downloadIfcElementsTasks = new List<Task<List<bimsync.IfcElement>>>();
+            List<Data.Task> customTasks = new List<Data.Task>();
 
-            using (StreamWriter outputfile = new StreamWriter(outputPath))
+            //Create a dataTable
+            DataSet pictureMetadata = new DataSet();
+            DataTable metadataTable = pictureMetadata.Tables.Add("metadataTable");
+
+            for (int j = 1; j < pageNumber + 1; j = j + taskNumber)
             {
-                outputfile.WriteLine(header);
-
-
-                for (int j = 1; j < pageNumber + 1; j = j + taskNumber)
+                for (int i = j; i < pageNumber + 1 & i < j + taskNumber; i++)
                 {
-                    for (int i = j; i < pageNumber + 1 & i < j + taskNumber; i++)
-                    {
-                        string requestUrl = baseUrl + "&page=" + i.ToString();
-                        Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
-                        downloadIfcElementsTasks.Add(downloadIfcElementsTask);
-                        customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
-                    }
-
-                    // ***Add a loop to process the tasks one at a time until none remain.  
-                    while (downloadIfcElementsTasks.Count > 0)
-                    {
-                        // Identify the first task that completes.  
-                        Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
-
-                        //Write it
-                        Data.Task customTask = customTasks.Where(t => t.AsyncTask == firstFinishedTask).FirstOrDefault();
-
-                        if (customTask != null)
-                        {
-                            logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Start task");
-
-                        }
-
-                        // ***Remove the selected task from the list so that you don't  
-                        // process it more than once.  
-                        downloadIfcElementsTasks.Remove(firstFinishedTask);
-
-                        // Await the completed task.  
-                        List<bimsync.IfcElement> ifcElements = await firstFinishedTask;
-
-                        logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "End task");
-
-                        string tempOutput = "";
-
-                        //Process the received elements
-                        foreach (bimsync.IfcElement ifcElement in ifcElements)
-                        {
-                            Data.Element element = new Data.Element();
-
-                            element.ifcType = ifcElement.ifcType;
-                            element.revisionId = ifcElement.revisionId;
-                            element.objectId = ifcElement.objectId;
-                            element.type = "";
-
-                            if (ifcElement.type != null)
-                            {
-                                element.type = ifcElement.type.objectId.ToString();
-                            }
-
-                            element.properties = GetIfcElementProperties(ifcElement);
-                            propertyDefinitions = UpdatePropertyDefinitions(element.GetPropertyDefinitions(), propertyDefinitions);
-                            tempOutput = tempOutput + element.ToString(propertyDefinitions) + "\r\n";
-                        }
-
-                        logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Process elements");
-
-                        outputfile.Write(tempOutput);
-
-                    }
+                    string requestUrl = baseUrl + "&page=" + i.ToString();
+                    Task<List<bimsync.IfcElement>> downloadIfcElementsTask = GetRessource(requestUrl);
+                    downloadIfcElementsTasks.Add(downloadIfcElementsTask);
+                    customTasks.Add(new Data.Task { AsyncTask = downloadIfcElementsTask, url = requestUrl });
                 }
 
-                outputfile.Write(header);
-            }
-        }
-
-        private List<Data.PropertyDefinition> UpdatePropertyDefinitions(List<Data.PropertyDefinition> newPropertyDefinitionsValues, List<Data.PropertyDefinition> initialPropertyDefinitions)
-        {
-            Data.PropertyDefinitionEqualityComparer comparer = new Data.PropertyDefinitionEqualityComparer();
-
-            foreach (Data.PropertyDefinition newValue in newPropertyDefinitionsValues)
-            {
-                if (!initialPropertyDefinitions.Contains(newValue, comparer))
+                // ***Add a loop to process the tasks one at a time until none remain.  
+                while (downloadIfcElementsTasks.Count > 0)
                 {
-                    initialPropertyDefinitions.Add(newValue);
-                    header = header + ";" + newValue.Name;
-                    if (!string.IsNullOrEmpty(newValue.Unit))
+                    // Identify the first task that completes.  
+                    Task<List<bimsync.IfcElement>> firstFinishedTask = await Task.WhenAny(downloadIfcElementsTasks);
+
+                    //Write it
+                    Data.Task customTask = customTasks.Where(t => t.AsyncTask == firstFinishedTask).FirstOrDefault();
+
+                    if (customTask != null)
                     {
-                        header = header + " (" + newValue.Unit + ")";
+                        logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Start task");
                     }
+
+                    // ***Remove the selected task from the list so that you don't  
+                    // process it more than once.  
+                    downloadIfcElementsTasks.Remove(firstFinishedTask);
+
+                    // Await the completed task.  
+                    List<bimsync.IfcElement> ifcElements = await firstFinishedTask;
+
+                    logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "End task");
+
+                    //Process the received elements
+                    foreach (bimsync.IfcElement ifcElement in ifcElements)
+                    {
+                        //Create a sorted IfcElement
+                        Data.SortedIfcElement element = new Data.SortedIfcElement(ifcElement);
+                        //Add it to the datatable
+                        element.AddToDataTable(metadataTable);
+                    }
+
+                    //Write the result to a text file
+
+                    logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Process elements");
+
                 }
             }
 
-            return initialPropertyDefinitions;
+            //Write down the content of the metatable
+            using (StreamWriter sw = File.CreateText(outputPath))
+            {
+                sw.WriteLine(String.Join("\t", metadataTable.Columns.Cast<DataColumn>().Select(item => item.ColumnName).ToList()));
+
+                foreach (DataRow row in metadataTable.Rows)
+                {
+                    sw.WriteLine(String.Join("\t", row.ItemArray));
+                }
+            }
+
         }
 
         private async Task<List<bimsync.IfcElement>> GetRessource(string url)
@@ -235,104 +210,6 @@ this.access_token = "uo0A5p3QKzv6T295Ozkrex";
 
             return response;
 
-        }
-
-        private List<Data.Property> GetIfcElementProperties(bimsync.IfcElement IfcElement)
-        {
-            //Create a list of property
-            List<Data.Property> dataProperties = new List<Data.Property>();
-
-            //Loop on property sets
-            JObject propertySets = IfcElement.propertySets as JObject;
-            if (propertySets != null) { dataProperties.AddRange(GetProperties(propertySets)); }
-
-            //Loop on quantity sets
-            JObject quantitySets = IfcElement.quantitySets as JObject;
-            if (quantitySets != null)
-            {
-                if (quantitySets.Children().Count() != 0)
-                {
-                    dataProperties.AddRange(GetProperties(quantitySets));
-                }
-            }
-
-            //if (quantitySets != null) {  }
-
-
-            //Loop on attributes
-            JObject attributes = IfcElement.attributes as JObject;
-            if (attributes != null)
-            {
-                foreach (JToken jTokenattribute in attributes.Children())
-                {
-                    bimsync.AttributeProperty property = jTokenattribute.Children().First().ToObject<bimsync.AttributeProperty>();
-
-                    property.Name = jTokenattribute.Path;
-
-                    //Create a new data property
-                    Data.Property dataProperty = new Data.Property();
-                    dataProperty.Name = property.Name;
-                    dataProperty.Unit = "string";
-                    dataProperty.Value = (property.value == null) ? "" : property.value.ToString();
-                    dataProperty.Type = property.ifcType;
-
-                    dataProperties.Add(dataProperty);
-                }
-            }
-
-            return dataProperties;
-        }
-
-        private List<Data.Property> GetProperties(JObject sets)
-        {
-            List<Data.Property> dataProperties = new List<Data.Property>();
-
-            foreach (JToken jToken in sets.Children())
-            {
-                bimsync.Set set = jToken.Children().First().ToObject<bimsync.Set>();
-                set.Name = jToken.Path;
-
-                JObject properties = set.properties as JObject;
-                if (properties == null) { properties = set.quantities as JObject; }
-
-                if (properties != null)
-                {
-                    //Loop on properties
-                    foreach (JToken jTokenProperty in properties.Children())
-                    {
-                        bimsync.Property property = jTokenProperty.Children().First().ToObject<bimsync.Property>();
-
-                        property.Name = jTokenProperty.Path;
-
-                        //Create a new data property
-                        Data.Property dataProperty = new Data.Property();
-                        dataProperty.Name = set.Name + "." + property.Name;
-                        dataProperty.Type = property.ifcType;
-
-                        bimsync.Value value = null;
-                        if (property.value != null)
-                        {
-                            value = property.value;
-                        }
-                        else if (property.nominalValue != null)
-                        {
-                            value = property.nominalValue;
-                        }
-
-                        if (value != null)
-                        {
-                            dataProperty.Unit = value.unit;
-                            dataProperty.Value = value.value;
-                        }
-
-
-                        dataProperties.Add(dataProperty);
-                    }
-
-                }
-            }
-
-            return dataProperties;
         }
     }
 }
