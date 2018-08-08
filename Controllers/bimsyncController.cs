@@ -118,10 +118,13 @@ namespace bimsyncManagerAPI.Controllers
 
                     //Write the result to a text file
 
-                    logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Process elements");
+                    logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + customTask.url + "\t" + "Processed " + elements.Count + " elements");
 
                 }
             }
+
+            logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + "Strating to write down the datatable");
+
 
             //Write down the content of the metatable
             using (StreamWriter sw = File.CreateText(outputPath))
@@ -132,7 +135,11 @@ namespace bimsyncManagerAPI.Controllers
                 {
                     sw.WriteLine(String.Join("\t", row.ItemArray));
                 }
+
+                metadataTable.Dispose();
             }
+
+            logFile.WriteLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "\t" + revisionId + "\t" + "Datatable writen down");
 
         }
 
